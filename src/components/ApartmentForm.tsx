@@ -28,13 +28,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import { SuccessDialog } from "@/components/SuccessDialog";
+import { InlineWidget } from "react-calendly";
+
+// Add Calendly type definition
+declare global {
+  interface Window {
+    Calendly: any;
+  }
+}
 
 const formSchema = z.object({
   name: z.string().min(2, {
     message: "Name must be at least 2 characters.",
+  }),
+  email: z.string().email({
+    message: "Please enter a valid email address.",
+  }),
+  phone: z.string().min(10, {
+    message: "Please enter a valid phone number.",
   }),
   age: z.string().min(1, {
     message: "Age is required.",
@@ -46,9 +60,6 @@ const formSchema = z.object({
     message:
       "Please provide information about who will be living in the apartment.",
   }),
-  viewingTime: z.string({
-    required_error: "Please select a viewing time.",
-  }),
   agreement: z.boolean().refine((val) => val === true, {
     message: "You must agree to the terms.",
   }),
@@ -58,11 +69,14 @@ export function ApartmentForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [calendlyEventUrl, setCalendlyEventUrl] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
+      email: "",
+      phone: "",
       age: "",
       job: "",
       livingArrangement: "",
@@ -70,16 +84,38 @@ export function ApartmentForm() {
     },
   });
 
+  useEffect(() => {
+    const handleCalendlyEvent = (e: any) => {
+      if (e.data.event && e.data.event.indexOf("calendly") === 0) {
+        if (e.data.event === "calendly.event_scheduled") {
+          setCalendlyEventUrl(e.data.payload.event.uri);
+          setTimeout(() => {
+            form.handleSubmit(onSubmit)();
+          }, 500);
+        }
+      }
+    };
+
+    window.addEventListener("message", handleCalendlyEvent);
+    return () => window.removeEventListener("message", handleCalendlyEvent);
+  }, [form]);
+
   const fillTestData = () => {
     form.setValue("name", "John Doe");
+    form.setValue("email", "john@example.com");
+    form.setValue("phone", "+972501234567");
     form.setValue("age", "30");
     form.setValue("job", "Software Engineer");
     form.setValue("livingArrangement", "Single, no pets");
-    form.setValue("viewingTime", "sunday");
     form.setValue("agreement", true);
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!calendlyEventUrl) {
+      setSubmitError("Please schedule a viewing time first");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       setSubmitError("");
@@ -89,7 +125,10 @@ export function ApartmentForm() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          ...values,
+          calendlyEventUrl,
+        }),
       });
 
       if (!response.ok) {
@@ -98,6 +137,7 @@ export function ApartmentForm() {
 
       setShowSuccess(true);
       form.reset();
+      setCalendlyEventUrl(null);
     } catch (_) {
       setSubmitError("Failed to submit form. Please try again.");
     } finally {
@@ -126,6 +166,42 @@ export function ApartmentForm() {
                     <FormLabel>Full Name</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter your full name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email Address</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="Enter your email address"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="tel"
+                        placeholder="Enter your phone number (e.g. +972501234567)"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -181,34 +257,36 @@ export function ApartmentForm() {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="viewingTime"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Preferred Viewing Time</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a viewing time" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="sunday">
-                          Sunday 5-6 pm (13th)
-                        </SelectItem>
-                        <SelectItem value="tuesday">
-                          Tuesday 5-6 pm (15th)
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
+              <div className="space-y-4">
+                <FormLabel>Schedule Viewing Time</FormLabel>
+                <div className="border rounded-lg overflow-hidden">
+                  <InlineWidget
+                    url="https://calendly.com/liyakharitonova/30min"
+                    styles={{
+                      height: "650px",
+                      width: "100%",
+                    }}
+                    prefill={{
+                      name: form.watch("name"),
+                      email: form.watch("email"),
+                      location: form.watch("phone"),
+                      smsReminderNumber: form.watch("phone"),
+                    }}
+                    pageSettings={{
+                      hideEventTypeDetails: false,
+                      hideLandingPageDetails: false,
+                    }}
+                    utm={{
+                      utmCampaign: "ApartmentViewing",
+                      utmSource: "Website",
+                      utmMedium: "PropertyForm",
+                    }}
+                  />
+                </div>
+                {submitError && (
+                  <p className="text-sm text-red-500">{submitError}</p>
                 )}
-              />
+              </div>
 
               <FormField
                 control={form.control}
@@ -231,10 +309,6 @@ export function ApartmentForm() {
                   </FormItem>
                 )}
               />
-
-              {submitError && (
-                <div className="text-red-500 text-sm">{submitError}</div>
-              )}
 
               <div className="flex gap-4">
                 <Button type="submit" disabled={isSubmitting}>

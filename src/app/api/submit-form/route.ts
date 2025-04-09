@@ -13,16 +13,15 @@ export async function POST(request: Request) {
       "🏠 New Apartment Viewing Request",
       "",
       "👤 Name: " + data.name,
+      "📧 Email: " + data.email,
+      "📱 Phone: " + data.phone,
       "📅 Age: " + data.age,
       "💼 Job: " + data.job,
       "👥 Living Arrangement: " + data.livingArrangement,
-      "🕒 Preferred Viewing Time: " +
-        (data.viewingTime === "sunday"
-          ? "Sunday 5-6 pm (13th)"
-          : "Tuesday 5-6 pm (15th)"),
+      "📅 Calendly Event: " + data.calendlyEventUrl,
       "✅ Agreed to Terms: Yes",
       "",
-      "Please contact the potential tenant to confirm the viewing.",
+      "Please check your Calendly dashboard for the scheduled viewing time.",
     ].join("\n");
 
     // Send to Telegram
