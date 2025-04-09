@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Real Estate Apartment Inquiry Form
 
-## Getting Started
+A modern web application for managing apartment viewing requests. Built with Next.js, Tailwind CSS, and shadcn/ui components. The application includes a form that collects potential tenant information and sends it directly to a Telegram channel.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
+- Modern, responsive UI built with Tailwind CSS and shadcn/ui
+- Form validation using Zod and React Hook Form
+- Telegram integration for instant notifications
+- Detailed apartment information display
+- Mobile-friendly design
+
+## Prerequisites
+
+- Node.js 18+
+- pnpm
+- A Telegram bot token and channel ID
+
+## Setup
+
+1. Clone the repository:
+   \`\`\`bash
+   git clone <repository-url>
+   cd real-estate-liya
+   \`\`\`
+
+2. Install dependencies:
+   \`\`\`bash
+   pnpm install
+   \`\`\`
+
+3. Create a \`.env.local\` file in the root directory and add your Telegram credentials:
+   \`\`\`env
+   TELEGRAM_BOT_TOKEN=your_bot_token_here
+   TELEGRAM_CHAT_ID=your_chat_id_here
+   \`\`\`
+
+To get these credentials:
+
+- Create a Telegram bot using [@BotFather](https://t.me/botfather) and get the token
+- Add the bot to your channel and get the channel ID
+
+## Development
+
+Run the development server:
+
+\`\`\`bash
 pnpm dev
-# or
-bun dev
-```
+\`\`\`
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The project is ready to be deployed on Vercel:
 
-## Learn More
+1. Push your code to a Git repository
+2. Import the project in Vercel
+3. Add the environment variables in Vercel's project settings
+4. Deploy!
 
-To learn more about Next.js, take a look at the following resources:
+## Environment Variables
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- \`TELEGRAM_BOT_TOKEN\`: Your Telegram bot token from @BotFather
+- \`TELEGRAM_CHAT_ID\`: The ID of your Telegram channel where messages will be sent
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Tech Stack
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Next.js](https://nextjs.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [shadcn/ui](https://ui.shadcn.com/)
+- [React Hook Form](https://react-hook-form.com/)
+- [Zod](https://github.com/colinhacks/zod)
+- [Telegram Bot API](https://core.telegram.org/bots/api)
