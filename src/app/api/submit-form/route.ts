@@ -8,6 +8,11 @@ export async function POST(request: Request) {
   try {
     const data = await request.json();
 
+    // Create a proper Calendly event link
+    const calendlyLink = data.calendlyEventUrl.startsWith("mock-calendly-event")
+      ? "(Mock Event - Development Mode)"
+      : `https://calendly.com/events/${data.calendlyEventUrl.split("/").pop()}`;
+
     // Format the message for Telegram
     const message = [
       "🏠 New Apartment Viewing Request",
@@ -18,10 +23,10 @@ export async function POST(request: Request) {
       "📅 Age: " + data.age,
       "💼 Job: " + data.job,
       "👥 Living Arrangement: " + data.livingArrangement,
-      "📅 Calendly Event: " + data.calendlyEventUrl,
+      "📅 Calendly Event: " + calendlyLink,
       "✅ Agreed to Terms: Yes",
       "",
-      "Please check your Calendly dashboard for the scheduled viewing time.",
+      "Please check your Calendly dashboard for additional details.",
     ].join("\n");
 
     // Send to Telegram
