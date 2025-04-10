@@ -46,26 +46,33 @@ declare global {
 
 const formSchema = z.object({
   name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
+    message:
+      "Name must be at least 2 characters. / שם חייב להכיל לפחות 2 תווים",
   }),
   email: z.string().email({
-    message: "Please enter a valid email address.",
+    message: 'Please enter a valid email address. / אנא הזן כתובת דוא"ל תקינה',
   }),
   phone: z.string().min(10, {
-    message: "Please enter a valid phone number.",
+    message: "Please enter a valid phone number. / אנא הזן מספר טלפון תקין",
   }),
   age: z.string().min(1, {
-    message: "Age is required.",
+    message: "Age is required. / גיל הוא שדה חובה",
   }),
   job: z.string().min(2, {
-    message: "Job information is required.",
+    message: "Job information is required. / מידע על תעסוקה הוא שדה חובה",
   }),
   livingArrangement: z.string().min(2, {
     message:
-      "Please provide information about who will be living in the apartment.",
+      "Please provide information about who will be living in the apartment. / אנא ספק מידע על מי יתגורר בדירה",
   }),
   agreement: z.boolean().refine((val) => val === true, {
-    message: "You must agree to the terms.",
+    message: "You must agree to the terms. / עליך להסכים לתנאים",
+  }),
+  agreementFirstCome: z.boolean().refine((val) => val === true, {
+    message: "You must agree to the terms. / עליך להסכים לתנאים",
+  }),
+  agreementResponse: z.boolean().refine((val) => val === true, {
+    message: "You must agree to the terms. / עליך להסכים לתנאים",
   }),
 });
 
@@ -91,6 +98,8 @@ export function ApartmentForm() {
       job: "",
       livingArrangement: "",
       agreement: false,
+      agreementFirstCome: false,
+      agreementResponse: false,
     },
   });
 
@@ -145,6 +154,8 @@ export function ApartmentForm() {
     form.setValue("job", "Software Engineer");
     form.setValue("livingArrangement", "Single, no pets");
     form.setValue("agreement", true);
+    form.setValue("agreementFirstCome", true);
+    form.setValue("agreementResponse", true);
   };
 
   const handleNextStep = async () => {
@@ -204,10 +215,12 @@ export function ApartmentForm() {
     <>
       <Card className="w-full max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle>Apartment Viewing Request</CardTitle>
+          <CardTitle>Apartment Viewing Request / בקשה לצפייה בדירה</CardTitle>
           <CardDescription>
             Fill out this form to schedule a viewing of the studio apartment at
             Yitzhak Sadeh Street 28
+            <br />
+            מלא טופס זה כדי לקבוע צפייה בדירת הסטודיו ברחוב יצחק שדה 28
           </CardDescription>
           <div className="flex items-center gap-2 mt-4">
             <div
@@ -232,10 +245,10 @@ export function ApartmentForm() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Full Name</FormLabel>
+                        <FormLabel>Full Name / שם מלא</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Enter your full name"
+                            placeholder="Enter your full name / הכנס את שמך המלא"
                             {...field}
                           />
                         </FormControl>
@@ -249,11 +262,13 @@ export function ApartmentForm() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email Address</FormLabel>
+                        <FormLabel>Email Address / כתובת דוא"ל</FormLabel>
                         <FormControl>
                           <Input
                             type="email"
-                            placeholder="Enter your email address"
+                            placeholder={
+                              "Enter your email address / הכנס את כתובת הדואל שלך"
+                            }
                             {...field}
                           />
                         </FormControl>
@@ -267,11 +282,13 @@ export function ApartmentForm() {
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Phone Number</FormLabel>
+                        <FormLabel>Phone Number / מספר טלפון</FormLabel>
                         <FormControl>
                           <Input
                             type="tel"
-                            placeholder="Enter your phone number (e.g. +972501234567)"
+                            placeholder={
+                              "Enter your phone number (e.g. +972501234567) / הכנס את מספר הטלפון שלך"
+                            }
                             {...field}
                           />
                         </FormControl>
@@ -285,11 +302,11 @@ export function ApartmentForm() {
                     name="age"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Age</FormLabel>
+                        <FormLabel>Age / גיל</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
-                            placeholder="Enter your age"
+                            placeholder="Enter your age / הכנס את גילך"
                             {...field}
                           />
                         </FormControl>
@@ -303,10 +320,10 @@ export function ApartmentForm() {
                     name="job"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Current Job</FormLabel>
+                        <FormLabel>Current Job / עבודה נוכחית</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Enter your current job"
+                            placeholder="Enter your current job / הכנס את עבודתך הנוכחית"
                             {...field}
                           />
                         </FormControl>
@@ -320,10 +337,10 @@ export function ApartmentForm() {
                     name="livingArrangement"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Living Arrangement</FormLabel>
+                        <FormLabel>Living Arrangement / הסדר מגורים</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Who will be living in the apartment? (pets, kids, alone or couple)"
+                            placeholder="Who will be living in the apartment? (pets, kids, alone or couple) / מי יגור בדירה? (חיות מחמד, ילדים, לבד או זוג)"
                             {...field}
                           />
                         </FormControl>
@@ -349,6 +366,61 @@ export function ApartmentForm() {
                           I understand and agree that I will pay the real estate
                           fee (one month rent + VAT) upon signing the lease
                           contract.
+                          <br />
+                          אני מבין/ה ומסכים/ה שאשלם את דמי התיווך (שכר דירה
+                          חודשי + מע"מ) בעת חתימת חוזה השכירות.
+                        </FormLabel>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="agreementFirstCome"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Input
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={field.onChange}
+                            className="w-4 h-4 mt-1"
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          I understand that I can choose from remaining
+                          apartments, but I will get it only if I'm the first
+                          one who signs the contract for it.
+                          <br />
+                          אני מבין/ה שאני יכול/ה לבחור מהדירות הנותרות, אבל אקבל
+                          אותה רק אם אני הראשון/ה שחותם/ת על החוזה עבורה.
+                        </FormLabel>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="agreementResponse"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Input
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={field.onChange}
+                            className="w-4 h-4 mt-1"
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          I will provide the answer whether I proceed with
+                          renting one of the apartments or not not later than 1
+                          week after the showing.
+                          <br />
+                          אני אספק תשובה האם אני ממשיך/ה עם שכירת אחת מהדירות או
+                          לא לא יאוחר משבוע לאחר הצפייה.
                         </FormLabel>
                         <FormMessage />
                       </FormItem>
@@ -357,14 +429,14 @@ export function ApartmentForm() {
 
                   <div className="flex gap-4">
                     <Button type="button" onClick={handleNextStep}>
-                      Next: Schedule Viewing
+                      Next: Schedule Viewing / הבא: קביעת צפייה
                     </Button>
                     <Button
                       type="button"
                       variant="outline"
                       onClick={fillTestData}
                     >
-                      Fill Test Data
+                      Fill Test Data / מילוי נתוני בדיקה
                     </Button>
                   </div>
                 </>
@@ -376,7 +448,7 @@ export function ApartmentForm() {
                       variant="outline"
                       onClick={handleBack}
                     >
-                      ← Back to Form
+                      ← Back to Form / חזרה לטופס
                     </Button>
                     <Button
                       type="submit"
@@ -385,15 +457,15 @@ export function ApartmentForm() {
                       {isSubmitting ? (
                         <>
                           <Spinner />
-                          Submitting...
+                          Submitting... / שולח...
                         </>
                       ) : (
-                        "Submit Request"
+                        "Submit Request / שלח בקשה"
                       )}
                     </Button>
                   </div>
 
-                  <FormLabel>Schedule Viewing Time</FormLabel>
+                  <FormLabel>Schedule Viewing Time / קביעת זמן צפייה</FormLabel>
                   <div className="border rounded-lg overflow-hidden">
                     {isDevelopment ? (
                       <MockCalendly

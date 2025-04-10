@@ -2,66 +2,71 @@ import { ApartmentForm } from "@/components/ApartmentForm";
 
 const apartmentDetails = [
   {
-    question: "Location",
+    question: "Location / מיקום",
     answer:
-      "Yitzhak Sadeh Street 28 (2 min from Carlebach light train station and TLV Mall)",
+      "Yitzhak Sadeh Street 28 (2 min from Carlebach light train station and TLV Mall) / רחוב יצחק שדה 28 (2 דקות מתחנת הרכבת הקלה קרליבך וקניון תל אביב)",
   },
   {
-    question: "Studio Size",
+    question: "Studio Size / גודל הסטודיו",
     answer:
-      "Multiple studios available with different layouts, all spacious enough for bed, couch, working and eating spaces",
+      "Multiple studios available with different layouts, all spacious enough for bed, couch, working and eating spaces / מספר סטודיות זמינות עם תכניות שונות, כולן מרווחות מספיק למיטה, ספה, פינת עבודה ופינת אוכל",
   },
   {
-    question: "Laundry",
-    answer: "Laundry room available on each floor",
+    question: "Laundry / כביסה",
+    answer: "Laundry room available on each floor / חדר כביסה זמין בכל קומה",
   },
   {
-    question: "Building Features",
+    question: "Building Features / מאפייני הבניין",
     answer:
-      "Coded entrance with nice lobby, fingerprint-enabled door locks, sound-proof windows",
+      "Coded entrance with nice lobby, fingerprint-enabled door locks, sound-proof windows / כניסה עם קוד, לובי מטופח, מנעולי דלת עם טביעת אצבע, חלונות מבודדי רעש",
   },
   {
-    question: "Construction",
+    question: "Construction / בנייה",
     answer:
-      "Ongoing sidewalk widening project nearby, expected to complete soon",
+      "Ongoing sidewalk widening project nearby, expected to complete soon / פרויקט הרחבת מדרכה בסביבה, צפוי להסתיים בקרוב",
   },
   {
-    question: "Availability",
-    answer: "Mid May - June, earlier entrance possible upon discussion",
-  },
-  {
-    question: "Parking",
-    answer: "No dedicated parking, but available in the area",
-  },
-  {
-    question: "Noise Level",
-    answer: "Quiet environment with sound-proof new windows",
-  },
-  {
-    question: "Rooftop",
-    answer: "Huge incredible rooftop available for tenant use",
-  },
-  {
-    question: "Pet Policy",
-    answer: "Small and medium quiet pets allowed",
-  },
-  {
-    question: "Rent",
+    question: "Availability / זמינות",
     answer:
-      "4800₪/month unfurnished, 5500₪/month fully furnished (including Vaad Bait)",
+      "Mid May - June, earlier entrance possible upon discussion / אמצע מאי - יוני, כניסה מוקדמת יותר אפשרית בדיון",
   },
   {
-    question: "Additional Costs",
+    question: "Parking / חניה",
     answer:
-      "One month deposit, Vaad Bait included, Arnona (TBC), utilities per usage",
+      "No dedicated parking, but available in the area / אין חניה ייעודית, אך זמינה באזור",
   },
   {
-    question: "Payment Terms",
-    answer: "12 post-dated checks",
+    question: "Noise Level / רמת רעש",
+    answer:
+      "Quiet environment with sound-proof new windows / סביבה שקטה עם חלונות חדשים מבודדי רעש",
   },
   {
-    question: "Real Estate Fee",
-    answer: "One month rent + VAT",
+    question: "Rooftop / גג",
+    answer:
+      "Huge incredible rooftop available for tenant use / גג ענק ומדהים זמין לשימוש הדיירים",
+  },
+  {
+    question: "Pet Policy / מדיניות חיות מחמד",
+    answer:
+      "Small and medium quiet pets allowed / מותרות חיות מחמד קטנות ובינוניות שקטות",
+  },
+  {
+    question: "Rent / שכר דירה",
+    answer:
+      "4800₪/month unfurnished, 5500₪/month fully furnished (including Vaad Bait) / 4800₪ לחודש ללא ריהוט, 5500₪ לחודש מרוהט במלואו (כולל ועד בית)",
+  },
+  {
+    question: "Additional Costs / עלויות נוספות",
+    answer:
+      "One month deposit, Vaad Bait included, Arnona (TBC), utilities per usage / חודש פיקדון, ועד בית כלול, ארנונה (לאישור), חשבונות לפי צריכה",
+  },
+  {
+    question: "Payment Terms / תנאי תשלום",
+    answer: "12 post-dated checks / 12 צ'קים דחויים",
+  },
+  {
+    question: "Real Estate Fee / דמי תיווך",
+    answer: 'One month rent + VAT / שכר דירה חודשי + מע"מ',
   },
 ];
 
@@ -72,9 +77,13 @@ export default function Home() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
             Modern Studio Apartments
+            <br />
+            דירות סטודיו מודרניות
           </h1>
           <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
             Prime location in Tel Aviv with excellent amenities
+            <br />
+            מיקום מרכזי בתל אביב עם מתקנים מעולים
           </p>
         </div>
 
@@ -82,7 +91,7 @@ export default function Home() {
           <div className="bg-white shadow rounded-lg overflow-hidden">
             <div className="px-4 py-5 sm:p-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Apartment Details
+                Apartment Details / פרטי הדירה
               </h2>
               <dl className="space-y-6">
                 {apartmentDetails.map((detail, index) => (
