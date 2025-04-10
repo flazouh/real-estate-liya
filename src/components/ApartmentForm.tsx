@@ -410,7 +410,7 @@ export function ApartmentForm() {
                       />
                     ) : (
                       <InlineWidget
-                        url="https://calendly.com/liyakharitonova/30min"
+                        url="https://calendly.com/liyakharitonova/apartments-showing"
                         styles={{
                           height: "650px",
                           width: "100%",
