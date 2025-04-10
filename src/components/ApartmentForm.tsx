@@ -32,6 +32,10 @@ import { useState, useEffect } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import { SuccessDialog } from "@/components/SuccessDialog";
 import { InlineWidget } from "react-calendly";
+import { MockCalendly } from "@/components/MockCalendly";
+
+// Add this constant at the top of the file
+const isDevelopment = process.env.NODE_ENV === "development";
 
 // Add Calendly type definition
 declare global {
@@ -70,6 +74,12 @@ export function ApartmentForm() {
   const [submitError, setSubmitError] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [calendlyEventUrl, setCalendlyEventUrl] = useState<string | null>(null);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [prefillValues, setPrefillValues] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -100,6 +110,33 @@ export function ApartmentForm() {
     return () => window.removeEventListener("message", handleCalendlyEvent);
   }, [form]);
 
+  useEffect(() => {
+    const updatePrefillValues = () => {
+      setPrefillValues({
+        name: form.getValues("name"),
+        email: form.getValues("email"),
+        phone: form.getValues("phone"),
+      });
+    };
+
+    const subscription = form.watch(() => {
+      // Only update prefill values when these specific fields change
+      const relevantFields = ["name", "email", "phone"];
+      const changedField = form.formState.dirtyFields;
+
+      if (
+        Object.keys(changedField).some((field) =>
+          relevantFields.includes(field)
+        )
+      ) {
+        // Add a small delay to batch potential multiple changes
+        setTimeout(updatePrefillValues, 500);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form]);
+
   const fillTestData = () => {
     form.setValue("name", "John Doe");
     form.setValue("email", "john@example.com");
@@ -108,6 +145,24 @@ export function ApartmentForm() {
     form.setValue("job", "Software Engineer");
     form.setValue("livingArrangement", "Single, no pets");
     form.setValue("agreement", true);
+  };
+
+  const handleNextStep = async () => {
+    const result = await form.trigger();
+    if (result) {
+      const values = form.getValues();
+      setPrefillValues({
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+      });
+      setCurrentStep(2);
+    }
+  };
+
+  const handleBack = () => {
+    setCurrentStep(1);
+    setCalendlyEventUrl(null);
   };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -154,177 +209,235 @@ export function ApartmentForm() {
             Fill out this form to schedule a viewing of the studio apartment at
             Yitzhak Sadeh Street 28
           </CardDescription>
+          <div className="flex items-center gap-2 mt-4">
+            <div
+              className={`h-2 flex-1 rounded ${
+                currentStep === 1 ? "bg-primary" : "bg-muted"
+              }`}
+            />
+            <div
+              className={`h-2 flex-1 rounded ${
+                currentStep === 2 ? "bg-primary" : "bg-muted"
+              }`}
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter your full name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email Address</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="Enter your email address"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="tel"
-                        placeholder="Enter your phone number (e.g. +972501234567)"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="age"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Age</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="Enter your age"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="job"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Current Job</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter your current job" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="livingArrangement"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Living Arrangement</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Who will be living in the apartment? (pets, kids, alone or couple)"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="space-y-4">
-                <FormLabel>Schedule Viewing Time</FormLabel>
-                <div className="border rounded-lg overflow-hidden">
-                  <InlineWidget
-                    url="https://calendly.com/liyakharitonova/30min"
-                    styles={{
-                      height: "650px",
-                      width: "100%",
-                    }}
-                    prefill={{
-                      name: form.watch("name"),
-                      email: form.watch("email"),
-                      location: form.watch("phone"),
-                      smsReminderNumber: form.watch("phone"),
-                    }}
-                    pageSettings={{
-                      hideEventTypeDetails: false,
-                      hideLandingPageDetails: false,
-                    }}
-                    utm={{
-                      utmCampaign: "ApartmentViewing",
-                      utmSource: "Website",
-                      utmMedium: "PropertyForm",
-                    }}
+              {currentStep === 1 ? (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter your full name"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                </div>
-                {submitError && (
-                  <p className="text-sm text-red-500">{submitError}</p>
-                )}
-              </div>
 
-              <FormField
-                control={form.control}
-                name="agreement"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Input
-                        type="checkbox"
-                        checked={field.value}
-                        onChange={field.onChange}
-                        className="w-4 h-4 mt-1"
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email Address</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="email"
+                            placeholder="Enter your email address"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone Number</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="tel"
+                            placeholder="Enter your phone number (e.g. +972501234567)"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="age"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Age</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Enter your age"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="job"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Current Job</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter your current job"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="livingArrangement"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Living Arrangement</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Who will be living in the apartment? (pets, kids, alone or couple)"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="agreement"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                        <FormControl>
+                          <Input
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={field.onChange}
+                            className="w-4 h-4 mt-1"
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          I understand and agree that I will pay the real estate
+                          fee (one month rent + VAT) upon signing the lease
+                          contract.
+                        </FormLabel>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="flex gap-4">
+                    <Button type="button" onClick={handleNextStep}>
+                      Next: Schedule Viewing
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={fillTestData}
+                    >
+                      Fill Test Data
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleBack}
+                    >
+                      ← Back to Form
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting || !calendlyEventUrl}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Spinner />
+                          Submitting...
+                        </>
+                      ) : (
+                        "Submit Request"
+                      )}
+                    </Button>
+                  </div>
+
+                  <FormLabel>Schedule Viewing Time</FormLabel>
+                  <div className="border rounded-lg overflow-hidden">
+                    {isDevelopment ? (
+                      <MockCalendly
+                        styles={{
+                          height: "650px",
+                          width: "100%",
+                        }}
+                        prefill={{
+                          name: prefillValues.name,
+                          email: prefillValues.email,
+                          location: prefillValues.phone,
+                          smsReminderNumber: prefillValues.phone,
+                        }}
                       />
-                    </FormControl>
-                    <FormLabel className="font-normal">
-                      I understand and agree that I will pay the real estate fee
-                      (one month rent + VAT) upon signing the lease contract.
-                    </FormLabel>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex gap-4">
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Spinner />
-                      Submitting...
-                    </>
-                  ) : (
-                    "Submit Request"
+                    ) : (
+                      <InlineWidget
+                        url="https://calendly.com/liyakharitonova/30min"
+                        styles={{
+                          height: "650px",
+                          width: "100%",
+                        }}
+                        prefill={{
+                          name: prefillValues.name,
+                          email: prefillValues.email,
+                          location: prefillValues.phone,
+                          smsReminderNumber: prefillValues.phone,
+                        }}
+                        pageSettings={{
+                          hideEventTypeDetails: false,
+                          hideLandingPageDetails: false,
+                        }}
+                        utm={{
+                          utmCampaign: "ApartmentViewing",
+                          utmSource: "Website",
+                          utmMedium: "PropertyForm",
+                        }}
+                      />
+                    )}
+                  </div>
+                  {submitError && (
+                    <p className="text-sm text-red-500">{submitError}</p>
                   )}
-                </Button>
-                <Button type="button" variant="outline" onClick={fillTestData}>
-                  Fill Test Data
-                </Button>
-              </div>
+                </div>
+              )}
             </form>
           </Form>
         </CardContent>
