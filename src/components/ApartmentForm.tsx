@@ -214,13 +214,17 @@ export function ApartmentForm() {
   return (
     <>
       <Card className="w-full max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle>Apartment Viewing Request / בקשה לצפייה בדירה</CardTitle>
-          <CardDescription>
+        <CardHeader className="px-4 sm:px-6">
+          <CardTitle className="text-xl sm:text-2xl">
+            Apartment Viewing Request / בקשה לצפייה בדירה
+          </CardTitle>
+          <CardDescription className="text-sm sm:text-base">
             Fill out this form to schedule a viewing of the studio apartment at
             Yitzhak Sadeh Street 28
-            <br />
-            מלא טופס זה כדי לקבוע צפייה בדירת הסטודיו ברחוב יצחק שדה 28
+            <br className="hidden sm:block" />
+            <span className="block sm:inline">
+              מלא טופס זה כדי לקבוע צפייה בדירת הסטודיו ברחוב יצחק שדה 28
+            </span>
           </CardDescription>
           <div className="flex items-center gap-2 mt-4">
             <div
@@ -235,9 +239,12 @@ export function ApartmentForm() {
             />
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 sm:px-6">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-4 sm:space-y-6"
+            >
               {currentStep === 1 ? (
                 <>
                   <FormField
@@ -427,32 +434,41 @@ export function ApartmentForm() {
                     )}
                   />
 
-                  <div className="flex gap-4">
-                    <Button type="button" onClick={handleNextStep}>
-                      Next: Schedule Viewing / הבא: קביעת צפייה
-                    </Button>
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                     <Button
                       type="button"
-                      variant="outline"
-                      onClick={fillTestData}
+                      onClick={handleNextStep}
+                      className="w-full sm:w-auto"
                     >
-                      Fill Test Data / מילוי נתוני בדיקה
+                      Next: Schedule Viewing / הבא: קביעת צפייה
                     </Button>
+                    {isDevelopment && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={fillTestData}
+                        className="w-full sm:w-auto"
+                      >
+                        Fill Test Data / מילוי נתוני בדיקה
+                      </Button>
+                    )}
                   </div>
                 </>
               ) : (
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4 mb-4">
                     <Button
                       type="button"
                       variant="outline"
                       onClick={handleBack}
+                      className="w-full sm:w-auto"
                     >
                       ← Back to Form / חזרה לטופס
                     </Button>
                     <Button
                       type="submit"
                       disabled={isSubmitting || !calendlyEventUrl}
+                      className="w-full sm:w-auto"
                     >
                       {isSubmitting ? (
                         <>
@@ -470,7 +486,7 @@ export function ApartmentForm() {
                     {isDevelopment ? (
                       <MockCalendly
                         styles={{
-                          height: "650px",
+                          height: "550px",
                           width: "100%",
                         }}
                         prefill={{
@@ -484,7 +500,7 @@ export function ApartmentForm() {
                       <InlineWidget
                         url="https://calendly.com/liyakharitonova/apartments-showing"
                         styles={{
-                          height: "650px",
+                          height: "550px",
                           width: "100%",
                         }}
                         prefill={{

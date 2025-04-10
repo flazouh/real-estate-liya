@@ -45,24 +45,26 @@ export function MockCalendly({ styles, prefill }: MockCalendlyProps) {
 
   return (
     <div style={styles} className="p-4 bg-white">
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <h3 className="text-lg font-semibold mb-2">Mock Calendly (Dev Mode)</h3>
-        <div className="text-sm text-muted-foreground mb-4">
+        <div className="text-xs sm:text-sm text-muted-foreground mb-4">
           <div>Name: {prefill.name}</div>
           <div>Email: {prefill.email}</div>
           <div>Phone: {prefill.smsReminderNumber}</div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="p-4">
-          <h4 className="font-medium mb-3">Select Date</h4>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <Card className="p-3 sm:p-4">
+          <h4 className="text-sm sm:text-base font-medium mb-2 sm:mb-3">
+            Select Date
+          </h4>
           <div className="space-y-2">
             {MOCK_TIME_SLOTS.map((dateSlot) => (
               <Button
                 key={dateSlot.date}
                 variant={selectedDate === dateSlot.date ? "default" : "outline"}
-                className="w-full"
+                className="w-full text-xs sm:text-sm"
                 onClick={() => {
                   setSelectedDate(dateSlot.date);
                   setSelectedTime(null);
@@ -79,15 +81,17 @@ export function MockCalendly({ styles, prefill }: MockCalendlyProps) {
         </Card>
 
         {selectedDate && (
-          <Card className="p-4">
-            <h4 className="font-medium mb-3">Select Time</h4>
+          <Card className="p-3 sm:p-4">
+            <h4 className="text-sm sm:text-base font-medium mb-2 sm:mb-3">
+              Select Time
+            </h4>
             <div className="space-y-2">
               {MOCK_TIME_SLOTS.find((d) => d.date === selectedDate)?.slots.map(
                 (time) => (
                   <Button
                     key={time}
                     variant={selectedTime === time ? "default" : "outline"}
-                    className="w-full"
+                    className="w-full text-xs sm:text-sm"
                     onClick={() => setSelectedTime(time)}
                   >
                     {time}

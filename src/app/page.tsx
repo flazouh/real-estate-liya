@@ -72,37 +72,39 @@ const apartmentDetails = [
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-gray-50 py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
+        <div className="text-center mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-gray-900">
             Modern Studio Apartments
-            <br />
-            דירות סטודיו מודרניות
+            <br className="hidden sm:block" />
+            <span className="block sm:inline">דירות סטודיו מודרניות</span>
           </h1>
-          <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+          <p className="mt-2 sm:mt-3 max-w-md mx-auto text-sm sm:text-base md:text-lg lg:text-xl text-gray-500 md:mt-5 md:max-w-3xl">
             Prime location in Tel Aviv with excellent amenities
-            <br />
-            מיקום מרכזי בתל אביב עם מתקנים מעולים
+            <br className="hidden sm:block" />
+            <span className="block sm:inline">
+              מיקום מרכזי בתל אביב עם מתקנים מעולים
+            </span>
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-12 mb-6 sm:mb-12">
           <div className="bg-white shadow rounded-lg overflow-hidden">
-            <div className="px-4 py-5 sm:p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            <div className="px-3 sm:px-4 py-4 sm:py-5 md:p-6">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
                 Apartment Details / פרטי הדירה
               </h2>
-              <dl className="space-y-6">
+              <dl className="space-y-4 sm:space-y-6">
                 {apartmentDetails.map((detail, index) => (
                   <div
                     key={index}
-                    className="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0"
+                    className="border-b border-gray-200 pb-3 sm:pb-4 last:border-b-0 last:pb-0"
                   >
-                    <dt className="text-sm font-medium text-gray-500">
+                    <dt className="text-xs sm:text-sm font-medium text-gray-500">
                       {detail.question}
                     </dt>
-                    <dd className="mt-1 text-sm text-gray-900">
+                    <dd className="mt-1 text-xs sm:text-sm text-gray-900">
                       {detail.answer}
                     </dd>
                   </div>
