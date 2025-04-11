@@ -30,7 +30,6 @@ import {
 } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { Spinner } from "@/components/ui/spinner";
-import { SuccessDialog } from "@/components/SuccessDialog";
 import { InlineWidget } from "react-calendly";
 import { MockCalendly } from "@/components/MockCalendly";
 
@@ -104,13 +103,59 @@ export function ApartmentForm() {
   });
 
   useEffect(() => {
-    const handleCalendlyEvent = (e: any) => {
+    const handleCalendlyEvent = async (e: any) => {
       if (e.data.event && e.data.event.indexOf("calendly") === 0) {
         if (e.data.event === "calendly.event_scheduled") {
-          setCalendlyEventUrl(e.data.payload.event.uri);
-          setTimeout(() => {
-            form.handleSubmit(onSubmit)();
-          }, 500);
+          try {
+            // Set the Calendly URL first
+            const eventUrl = e.data.payload.event.uri;
+            setCalendlyEventUrl(eventUrl);
+
+            // Get current form values
+            const values = form.getValues();
+
+            // Validate the form
+            const isValid = await form.trigger();
+            if (!isValid) {
+              setSubmitError(
+                "Please fill in all required fields before scheduling"
+              );
+              return;
+            }
+
+            // Submit the form with the values and calendly URL
+            try {
+              setIsSubmitting(true);
+              setSubmitError("");
+
+              const response = await fetch("/api/submit-form", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  ...values,
+                  calendlyEventUrl: eventUrl,
+                }),
+              });
+
+              if (!response.ok) {
+                throw new Error("Failed to submit form");
+              }
+
+              setShowSuccess(true);
+              form.reset();
+              setCalendlyEventUrl(null);
+            } catch (error) {
+              console.error("Error submitting form:", error);
+              setSubmitError("Failed to submit form. Please try again.");
+            } finally {
+              setIsSubmitting(false);
+            }
+          } catch (error) {
+            console.error("Error handling Calendly event:", error);
+            setSubmitError("Failed to process scheduling. Please try again.");
+          }
         }
       }
     };
@@ -216,321 +261,343 @@ export function ApartmentForm() {
       <Card className="w-full max-w-2xl mx-auto">
         <CardHeader className="px-4 sm:px-6">
           <CardTitle className="text-xl sm:text-2xl">
-            Apartment Viewing Request / בקשה לצפייה בדירה
+            {showSuccess
+              ? "Request Submitted Successfully! / הבקשה נשלחה בהצלחה!"
+              : "Apartment Viewing Request / בקשה לצפייה בדירה"}
           </CardTitle>
-          <CardDescription className="text-sm sm:text-base">
-            Fill out this form to schedule a viewing of the studio apartment at
-            Yitzhak Sadeh Street 28
-            <br className="hidden sm:block" />
-            <span className="block sm:inline">
-              מלא טופס זה כדי לקבוע צפייה בדירת הסטודיו ברחוב יצחק שדה 28
-            </span>
-          </CardDescription>
-          <div className="flex items-center gap-2 mt-4">
-            <div
-              className={`h-2 flex-1 rounded ${
-                currentStep === 1 ? "bg-primary" : "bg-muted"
-              }`}
-            />
-            <div
-              className={`h-2 flex-1 rounded ${
-                currentStep === 2 ? "bg-primary" : "bg-muted"
-              }`}
-            />
-          </div>
+          {!showSuccess && (
+            <>
+              <CardDescription className="text-sm sm:text-base">
+                Fill out this form to schedule a viewing of the studio apartment
+                at Yitzhak Sadeh Street 28
+                <br className="hidden sm:block" />
+                <span className="block sm:inline">
+                  מלא טופס זה כדי לקבוע צפייה בדירת הסטודיו ברחוב יצחק שדה 28
+                </span>
+              </CardDescription>
+              <div className="flex items-center gap-2 mt-4">
+                <div
+                  className={`h-2 flex-1 rounded ${
+                    currentStep === 1 ? "bg-primary" : "bg-muted"
+                  }`}
+                />
+                <div
+                  className={`h-2 flex-1 rounded ${
+                    currentStep === 2 ? "bg-primary" : "bg-muted"
+                  }`}
+                />
+              </div>
+            </>
+          )}
         </CardHeader>
         <CardContent className="px-4 sm:px-6">
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-4 sm:space-y-6"
-            >
-              {currentStep === 1 ? (
-                <>
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Name / שם מלא</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter your full name / הכנס את שמך המלא"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+          {showSuccess ? (
+            <div className="text-center space-y-4">
+              <div className="text-6xl mb-6">✅</div>
+              <h2 className="text-xl font-semibold mb-2">
+                Thank you for your request! / !תודה על בקשתך
+              </h2>
+              <p className="text-muted-foreground">
+                We have received your viewing request and calendar invitation.
+                You will receive a confirmation email shortly.
+                <br />
+                קיבלנו את בקשת הצפייה שלך והזמנת היומן. בקרוב תקבל אימייל אישור.
+              </p>
+              <p className="text-muted-foreground mt-4">
+                If you have any questions, please contact us at:
+                <br />
+                :אם יש לך שאלות, אנא צור קשר בכתובת
+                <br />
+                <a
+                  href="mailto:liyakharitonova@gmail.com"
+                  className="text-primary hover:underline"
+                >
+                  liyakharitonova@gmail.com
+                </a>
+              </p>
+            </div>
+          ) : (
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4 sm:space-y-6"
+              >
+                {currentStep === 1 ? (
+                  <>
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Full Name / שם מלא</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter your full name / הכנס את שמך המלא"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email Address / כתובת דוא"ל</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="email"
-                            placeholder={
-                              "Enter your email address / הכנס את כתובת הדואל שלך"
-                            }
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email Address / כתובת דוא"ל</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              placeholder={
+                                "Enter your email address / הכנס את כתובת הדואל שלך"
+                              }
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Phone Number / מספר טלפון</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="tel"
-                            placeholder={
-                              "Enter your phone number (e.g. +972501234567) / הכנס את מספר הטלפון שלך"
-                            }
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone Number / מספר טלפון</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="tel"
+                              placeholder={
+                                "Enter your phone number (e.g. +972501234567) / הכנס את מספר הטלפון שלך"
+                              }
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="age"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Age / גיל</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="Enter your age / הכנס את גילך"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="age"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Age / גיל</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="Enter your age / הכנס את גילך"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="job"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Current Job / עבודה נוכחית</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter your current job / הכנס את עבודתך הנוכחית"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="job"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Current Job / עבודה נוכחית</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter your current job / הכנס את עבודתך הנוכחית"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="livingArrangement"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Living Arrangement / הסדר מגורים</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Who will be living in the apartment? (pets, kids, alone or couple) / מי יגור בדירה? (חיות מחמד, ילדים, לבד או זוג)"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="livingArrangement"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Living Arrangement / הסדר מגורים
+                          </FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Who will be living in the apartment? (pets, kids, alone or couple) / מי יגור בדירה? (חיות מחמד, ילדים, לבד או זוג)"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="agreement"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Input
-                            type="checkbox"
-                            checked={field.value}
-                            onChange={field.onChange}
-                            className="w-4 h-4 mt-1"
-                          />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          I understand and agree that I will pay the real estate
-                          fee (one month rent + VAT) upon signing the lease
-                          contract.
-                          <br />
-                          אני מבין/ה ומסכים/ה שאשלם את דמי התיווך (שכר דירה
-                          חודשי + מע"מ) בעת חתימת חוזה השכירות.
-                        </FormLabel>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="agreement"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="w-4 h-4 mt-1"
+                            />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            I understand and agree that I will pay the real
+                            estate fee (one month rent + VAT) upon signing the
+                            lease contract.
+                            <br />
+                            אני מבין/ה ומסכים/ה שאשלם את דמי התיווך (שכר דירה
+                            חודשי + מע"מ) בעת חתימת חוזה השכירות.
+                          </FormLabel>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="agreementFirstCome"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Input
-                            type="checkbox"
-                            checked={field.value}
-                            onChange={field.onChange}
-                            className="w-4 h-4 mt-1"
-                          />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          I understand that I can choose from remaining
-                          apartments, but I will get it only if I'm the first
-                          one who signs the contract for it.
-                          <br />
-                          אני מבין/ה שאני יכול/ה לבחור מהדירות הנותרות, אבל אקבל
-                          אותה רק אם אני הראשון/ה שחותם/ת על החוזה עבורה.
-                        </FormLabel>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="agreementFirstCome"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="w-4 h-4 mt-1"
+                            />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            I understand that I can choose from remaining
+                            apartments, but I will get it only if I'm the first
+                            one who signs the contract for it.
+                            <br />
+                            אני מבין/ה שאני יכול/ה לבחור מהדירות הנותרות, אבל
+                            אקבל אותה רק אם אני הראשון/ה שחותם/ת על החוזה עבורה.
+                          </FormLabel>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="agreementResponse"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                        <FormControl>
-                          <Input
-                            type="checkbox"
-                            checked={field.value}
-                            onChange={field.onChange}
-                            className="w-4 h-4 mt-1"
-                          />
-                        </FormControl>
-                        <FormLabel className="font-normal">
-                          I will provide the answer whether I proceed with
-                          renting one of the apartments or not not later than 1
-                          week after the showing.
-                          <br />
-                          אני אספק תשובה האם אני ממשיך/ה עם שכירת אחת מהדירות או
-                          לא לא יאוחר משבוע לאחר הצפייה.
-                        </FormLabel>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="agreementResponse"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="w-4 h-4 mt-1"
+                            />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            I will provide the answer whether I proceed with
+                            renting one of the apartments or not not later than
+                            1 week after the showing.
+                            <br />
+                            אני אספק תשובה האם אני ממשיך/ה עם שכירת אחת מהדירות
+                            או לא לא יאוחר משבוע לאחר הצפייה.
+                          </FormLabel>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                    <Button
-                      type="button"
-                      onClick={handleNextStep}
-                      className="w-full sm:w-auto"
-                    >
-                      Next: Schedule Viewing / הבא: קביעת צפייה
-                    </Button>
-                    {isDevelopment && (
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                      <Button
+                        type="button"
+                        onClick={handleNextStep}
+                        className="w-full sm:w-auto"
+                      >
+                        Next: Schedule Viewing / הבא: קביעת צפייה
+                      </Button>
+                      {isDevelopment && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={fillTestData}
+                          className="w-full sm:w-auto"
+                        >
+                          Fill Test Data / מילוי נתוני בדיקה
+                        </Button>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4 mb-4">
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={fillTestData}
+                        onClick={handleBack}
                         className="w-full sm:w-auto"
                       >
-                        Fill Test Data / מילוי נתוני בדיקה
+                        ← Back to Form / חזרה לטופס
                       </Button>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4 mb-4">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleBack}
-                      className="w-full sm:w-auto"
-                    >
-                      ← Back to Form / חזרה לטופס
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={isSubmitting || !calendlyEventUrl}
-                      className="w-full sm:w-auto"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Spinner />
-                          Submitting... / שולח...
-                        </>
-                      ) : (
-                        "Submit Request / שלח בקשה"
-                      )}
-                    </Button>
-                  </div>
+                    </div>
 
-                  <FormLabel>Schedule Viewing Time / קביעת זמן צפייה</FormLabel>
-                  <div className="border rounded-lg overflow-hidden">
-                    {isDevelopment ? (
-                      <MockCalendly
-                        styles={{
-                          height: "550px",
-                          width: "100%",
-                        }}
-                        prefill={{
-                          name: prefillValues.name,
-                          email: prefillValues.email,
-                          location: prefillValues.phone,
-                          smsReminderNumber: prefillValues.phone,
-                        }}
-                      />
-                    ) : (
-                      <InlineWidget
-                        url="https://calendly.com/liyakharitonova/apartments-showing"
-                        styles={{
-                          height: "550px",
-                          width: "100%",
-                        }}
-                        prefill={{
-                          name: prefillValues.name,
-                          email: prefillValues.email,
-                          location: prefillValues.phone,
-                          smsReminderNumber: prefillValues.phone,
-                        }}
-                        pageSettings={{
-                          hideEventTypeDetails: false,
-                          hideLandingPageDetails: false,
-                        }}
-                        utm={{
-                          utmCampaign: "ApartmentViewing",
-                          utmSource: "Website",
-                          utmMedium: "PropertyForm",
-                        }}
-                      />
+                    <FormLabel>
+                      Schedule Viewing Time / קביעת זמן צפייה
+                    </FormLabel>
+                    <div className="border rounded-lg overflow-hidden">
+                      {isDevelopment ? (
+                        <MockCalendly
+                          styles={{
+                            height: "550px",
+                            width: "100%",
+                          }}
+                          prefill={{
+                            name: prefillValues.name,
+                            email: prefillValues.email,
+                            location: prefillValues.phone,
+                            smsReminderNumber: prefillValues.phone,
+                          }}
+                        />
+                      ) : (
+                        <InlineWidget
+                          url="https://calendly.com/liyakharitonova/apartments-showing"
+                          styles={{
+                            height: "550px",
+                            width: "100%",
+                          }}
+                          prefill={{
+                            name: prefillValues.name,
+                            email: prefillValues.email,
+                            location: prefillValues.phone,
+                            smsReminderNumber: prefillValues.phone,
+                          }}
+                          pageSettings={{
+                            hideEventTypeDetails: false,
+                            hideLandingPageDetails: false,
+                          }}
+                          utm={{
+                            utmCampaign: "ApartmentViewing",
+                            utmSource: "Website",
+                            utmMedium: "PropertyForm",
+                          }}
+                        />
+                      )}
+                    </div>
+                    {submitError && (
+                      <p className="text-sm text-red-500">{submitError}</p>
                     )}
                   </div>
-                  {submitError && (
-                    <p className="text-sm text-red-500">{submitError}</p>
-                  )}
-                </div>
-              )}
-            </form>
-          </Form>
+                )}
+              </form>
+            </Form>
+          )}
         </CardContent>
       </Card>
-      <SuccessDialog open={showSuccess} onClose={() => setShowSuccess(false)} />
     </>
   );
 }
